@@ -9,6 +9,9 @@ import math
 #documentation on using the CudnnLSTM bindings, so this provides a minimal
 #working example for future reference.
 
+#As far as I can tell this is the first nontrivial example of the CudnnLSTM
+#bindings being used on the web. 
+
 #We wish to train a network to classify sequences of random vectors on the unit
 #cube, where the first vector's sign determines the (binary) classification of
 #the sequence. To save space, we limit the length of the alphabet to 128 (in the
