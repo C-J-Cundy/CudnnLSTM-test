@@ -134,15 +134,21 @@ def RNN(x, weights, biases, input_h, input_c, params):
 
 pred = RNN(x, weights, biases, input_h, input_c, params)
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
+tf.summary.scalar('cost', cost)
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+acc = tf.summary.scalar('acc', accuracy)
+init = tf.global_variables_initializer()
+merged = tf.summary.merge_all()
 
 init = tf.global_variables_initializer()
 
 with tf.Session() as sess:
     sess.run(init)
     step = 1
+    train_writer = tf.summary.FileWriter('./', sess.graph)
+    test_writer = tf.summary.FileWriter('./', sess.graph)
     # Keep training until reach max iterations
     while step * batch_size < training_iters:
         batch_x, batch_y = gen_2b_data(n_steps-1, n_input-1, batch_size)
@@ -153,6 +159,8 @@ with tf.Session() as sess:
             acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
             # Calculate batch loss
             loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
+            summary, acc = sess.run([merged, cost], feed_dict={x: batch_x, y: batch_y})
+            test_writer.add_summary(summary, step)
             print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
                   "{:.6f}".format(loss) + ", Training Accuracy= " + \
                   "{:.5f}".format(acc))
