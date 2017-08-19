@@ -138,11 +138,12 @@ tf.summary.scalar('cost', cost)
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
-acc = tf.summary.scalar('acc', accuracy)
+tf.summary.scalar('acc', accuracy)
 init = tf.global_variables_initializer()
 merged = tf.summary.merge_all()
 
 init = tf.global_variables_initializer()
+saver = tf.train.Saver()
 
 with tf.Session() as sess:
     sess.run(init)
@@ -159,10 +160,13 @@ with tf.Session() as sess:
             acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
             # Calculate batch loss
             loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
-            summary, acc = sess.run([merged, cost], feed_dict={x: batch_x, y: batch_y})
+            summary, _ = sess.run([merged, cost], feed_dict={x: batch_x, y: batch_y})
+            summary, _ = sess.run([merged, accuracy], feed_dict={x: batch_x, y: batch_y})\
             test_writer.add_summary(summary, step)
             print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
                   "{:.6f}".format(loss) + ", Training Accuracy= " + \
                   "{:.5f}".format(acc))
         step += 1
+        if step % (display_step*10) == 0: #Save the model every so often
+            saver.save(sess, 'CudnnLSTM_'+str(n_steps)+'_steps', global_step=step)
     print("Optimization Finished!")
