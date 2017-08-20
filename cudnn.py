@@ -53,7 +53,7 @@ def gen_2b_data(p, q, bs):
 learning_rate = 0.005
 training_iters = 500000
 batch_size = 1024
-display_step = 10
+display_step = 5
 
 #Network Parameters
 n_steps = 20148
@@ -148,8 +148,7 @@ saver = tf.train.Saver()
 with tf.Session() as sess:
     sess.run(init)
     step = 1
-    train_writer = tf.summary.FileWriter('./', sess.graph)
-    test_writer = tf.summary.FileWriter('./', sess.graph)
+    test_writer = tf.summary.FileWriter('./CudnnLSTM_'+str(n_steps)+'_stepslog', sess.graph)
     # Keep training until reach max iterations
     while step * batch_size < training_iters:
         batch_x, batch_y = gen_2b_data(n_steps-1, n_input-1, batch_size)
