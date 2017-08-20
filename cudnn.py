@@ -49,19 +49,20 @@ def gen_2b_data(p, q, bs):
     perm = np.random.permutation(bs) #Shuffle order of outputs
     return x_out[:, perm, :], y_out[perm]
 
+#Network Parameters
+n_steps = 8192
+n_hidden = 256
+n_input = 257
+n_classes = 2
+n_layers = 1
+sn = 1/math.sqrt(n_input) #Glorot initialisation
+
 #Training Parameters
 learning_rate = 0.002
 training_iters = 5000000
 batch_size = 128
-display_step = 5
+display_step = 30
 
-#Network Parameters
-n_steps = 8192
-n_hidden = 127
-n_input = 128
-n_classes = 2
-n_layers = 1
-sn = 1/math.sqrt(n_input) #Glorot initialisation
 
 #Initialise variables
 ################################################################################
@@ -135,7 +136,8 @@ def RNN(x, weights, biases, input_h, input_c, params):
 pred = RNN(x, weights, biases, input_h, input_c, params)
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
 tf.summary.scalar('cost', cost)
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate,
+                                   ).minimize(cost)
 correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 tf.summary.scalar('acc', accuracy)
