@@ -160,7 +160,7 @@ with tf.Session() as sess:
             # Calculate batch loss
             loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
             summary, _ = sess.run([merged, cost], feed_dict={x: batch_x, y: batch_y})
-            summary, _ = sess.run([merged, accuracy], feed_dict={x: batch_x, y: batch_y})\
+            summary, _ = sess.run([merged, accuracy], feed_dict={x: batch_x, y: batch_y})
             test_writer.add_summary(summary, step)
             print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
                   "{:.6f}".format(loss) + ", Training Accuracy= " + \
