@@ -50,13 +50,13 @@ def gen_2b_data(p, q, bs):
     return x_out[:, perm, :], y_out[perm]
 
 #Training Parameters
-learning_rate = 0.005
-training_iters = 500000
-batch_size = 1024
+learning_rate = 0.002
+training_iters = 5000000
+batch_size = 128
 display_step = 5
 
 #Network Parameters
-n_steps = 20148
+n_steps = 8192
 n_hidden = 127
 n_input = 128
 n_classes = 2
@@ -109,10 +109,10 @@ for n in range(8):
 
 #Set forget gate bias high to ensure no early forgetting
 bias_list[1] = np.float32(
-        20*np.ones([n_hidden]))
+        5*np.ones([n_hidden]))
 
 bias_list[5] = np.float32(
-        20*np.ones([n_hidden]))
+        5*np.ones([n_hidden]))
 
 params = {
     'out': model.canonical_to_params(weight_list, bias_list)
