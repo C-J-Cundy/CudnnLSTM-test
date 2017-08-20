@@ -4,13 +4,12 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 def plot_tensorflow_log(log_files):
     fig, ax = plt.subplots()
     clrs = sns.color_palette("husl", len(log_files))
-    window = 20
+    window = 50
     tf_size_guidance = {
         'compressedHistograms': 10,
         'images': 0,
@@ -44,7 +43,7 @@ def plot_tensorflow_log(log_files):
         ax.plot(x, means, c=clrs[i], label=f)
         ax.fill_between(x, means-stds, means+stds, alpha=0.3, facecolor=clrs[i])
     plt.xlabel("Wall Time / mins")
-    plt.ylabel("Accuracy")
+    plt.ylabel("Accuracy (Moving Average)")
     plt.title("Training Progress")
     plt.legend(loc='upper right', frameon=True)
     plt.show()
