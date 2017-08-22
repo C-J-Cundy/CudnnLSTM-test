@@ -147,27 +147,29 @@ merged = tf.summary.merge_all()
 init = tf.global_variables_initializer()
 saver = tf.train.Saver()
 
-with tf.Session() as sess:
-    sess.run(init)
-    step = 1
-    test_writer = tf.summary.FileWriter('./CudnnLSTM_'+str(n_steps)+'_stepslog', sess.graph)
-    # Keep training until reach max iterations
-    while step * batch_size < training_iters:
-        batch_x, batch_y = gen_2b_data(n_steps-1, n_input-1, batch_size)
-        # Run optimization op (backprop)
-        sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
-        if step % display_step == 0:
-            # Calculate batch accuracy
-            acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
-            # Calculate batch loss
-            loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
-            summary, _ = sess.run([merged, cost], feed_dict={x: batch_x, y: batch_y})
-            summary, _ = sess.run([merged, accuracy], feed_dict={x: batch_x, y: batch_y})
-            test_writer.add_summary(summary, step)
-            print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
-                  "{:.6f}".format(loss) + ", Training Accuracy= " + \
-                  "{:.5f}".format(acc))
-        step += 1
-        if step % (display_step*10) == 0: #Save the model every so often
-            saver.save(sess, 'CudnnLSTM_'+str(n_steps)+'_steps', global_step=step)
-    print("Optimization Finished!")
+
+with tf.device("gpu:0"):
+    with tf.Session() as sess:
+        sess.run(init)
+        step = 1
+        test_writer = tf.summary.FileWriter('./CudnnLSTM_'+str(n_steps)+'_stepslog', sess.graph)
+        # Keep training until reach max iterations
+        while step * batch_size < training_iters:
+            batch_x, batch_y = gen_2b_data(n_steps-1, n_input-1, batch_size)
+            # Run optimization op (backprop)
+            sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
+            if step % display_step == 0:
+                # Calculate batch accuracy
+                acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
+                # Calculate batch loss
+                loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
+                summary, _ = sess.run([merged, cost], feed_dict={x: batch_x, y: batch_y})
+                summary, _ = sess.run([merged, accuracy], feed_dict={x: batch_x, y: batch_y})
+                test_writer.add_summary(summary, step)
+                print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
+                      "{:.6f}".format(loss) + ", Training Accuracy= " + \
+                      "{:.5f}".format(acc))
+                step += 1
+                if step % (display_step*10) == 0: #Save the model every so often
+                    saver.save(sess, 'CudnnLSTM_'+str(n_steps)+'_steps', global_step=step)
+        print("Optimization Finished!")
