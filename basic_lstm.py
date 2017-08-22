@@ -62,9 +62,6 @@ display_step = 30
 #Initialise variables
 ################################################################################
 
-#Generate dummy model so that we can use its method later on
-model = tf.contrib.cudnn_rnn.CudnnLSTM(n_layers, n_hidden, n_input)
-
 # tf Graph input
 x = tf.placeholder("float", [n_steps, batch_size, n_input])
 y = tf.placeholder("float", [batch_size, n_classes])
@@ -87,8 +84,8 @@ def RNN(x, weights, biases):
     # Unstack to get a list of 'n_steps' tensors of shape (batch_size, n_input)
     x = tf.unstack(x, num=n_steps, axis=0)
     # Define a lstm cell with tensorflow
-    lstm_cell = rnn.BasicLSTMCell(n_hidden, forget_bias=5.0)
-    rnn_cell = rnn.MultiRNNCell([rnn.BasicLSTMCell(n_hidden) for _ in range(n_layers)])
+    rnn_cell = rnn.MultiRNNCell([rnn.BasicLSTMCell(n_hidden, forget_bias=5.0)
+                                 for _ in range(n_layers)])
     # Get lstm cell output
     outputs, states = rnn.static_rnn(rnn_cell, x, dtype=tf.float32)
 
@@ -129,7 +126,7 @@ with tf.device("gpu:0"):
                 print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
                       "{:.6f}".format(loss) + ", Training Accuracy= " + \
                       "{:.5f}".format(acc))
-                step += 1
                 if step % (display_step*10) == 0: #Save the model every so often
                     saver.save(sess, 'BasicLSTM_'+str(n_steps)+'_steps', global_step=step)
+            step += 1                    
         print("Optimization Finished!")
