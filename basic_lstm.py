@@ -80,7 +80,7 @@ biases = {
 #Generate network
 ################################################################################
 
-def RNN(x, weights, biases)
+def RNN(x, weights, biases):
     # Prepare data shape to match `rnn` function requirements
     # Current data input shape: (batch_size, n_steps, n_input)
     # Required shape: 'n_steps' tensors list of shape (batch_size, n_input)
