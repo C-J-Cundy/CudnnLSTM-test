@@ -55,26 +55,27 @@ n_hidden = 256
 n_input = 257
 n_classes = 2
 n_layers = 1
-sn = 1/math.sqrt(n_input) #Glorot initialisation
+sn = math.sqrt(3.0)/math.sqrt(n_input+n_hidden) #Glorot initialisation, var(p(x))
+forget_gate_init = 5.0                          # = 1/(n_in). We use uniform p(x)
+
 
 #Training Parameters
 learning_rate = 0.002
 training_iters = 5000000
 batch_size = 128
-display_step = 30
+display_step = 10
 
 
 #Initialise variables
 ################################################################################
-
-#Generate dummy model so that we can use its method later on
+#Generate the lstm hook to CUDA
 model = tf.contrib.cudnn_rnn.CudnnLSTM(n_layers, n_hidden, n_input)
 
 # tf Graph input
 x = tf.placeholder("float", [n_steps, batch_size, n_input])
 y = tf.placeholder("float", [batch_size, n_classes])
 
-# Define weights & parameters
+#Define weights & rnn initial states
 weights = {
     'out': tf.Variable(tf.random_normal([n_hidden, n_classes]), dtype='float')
 }
@@ -91,13 +92,17 @@ input_c = {
                        trainable=False)
 }
 #Initialise all weights & biases for the cudnnlstm: set weights according to Glorot
-#There are eight weights and biases per layer in the LSTM, 
+#There are eight weights and biases per layer in the LSTM. Described in 
+#http://docs.nvidia.com/deeplearning/sdk/cudnn-user-guide/index.html#cudnnRNNMode_t
+#There are two biases which sum to give the biases in the canonical form of the LSTM
+#This seems redundant - I'm not sure why CUDA is implemented in this way.
+
 weight_list = []
 bias_list = []
 for n in range(4):
     weight_list.append(np.float32(
         np.random.uniform(low=-sn, high=sn,
-                          size=[n_input, n_hidden])))
+                          size=[n_hidden, n_input])))
 
 for n in range(4,8):
     weight_list.append(np.float32(
@@ -108,42 +113,49 @@ for n in range(8):
     bias_list.append(np.float32(
         np.zeros([n_hidden])))
 
-#Set forget gate bias high to ensure no early forgetting
-bias_list[1] = np.float32(
-        5*np.ones([n_hidden]))
-
 bias_list[5] = np.float32(
-        5*np.ones([n_hidden]))
+        forget_gate_init*np.ones([n_hidden]))
+
+#Initialize the opaque parameter buffer used to handle the cudnnlstm params
+#If we try to pass the canonical_to_params tensor through the call graph,
+#we fail because the size must be known statically. The easiest way to get
+#around this (though hacky) is to get the values out by casting to an np array
+#and then initialising a tensor with those values.
+
+params_size_t = (  (n_input * n_hidden * 4) 
+                 + (n_hidden * n_hidden * 4)
+                 + (n_hidden * 2 * 4))
+flat_params = model.canonical_to_params(weight_list, bias_list)
+flat_params_as_ndarray = tf.Session().run(flat_params) 
 
 params = {
-    'out': model.canonical_to_params(weight_list, bias_list)
+    'out': tf.get_variable('param_buffer', initializer=tf.constant(
+        flat_params_as_ndarray))
 }
-
 #Generate network
 ################################################################################
 
-def RNN(x, weights, biases, input_h, input_c, params):
-    rnn_cell = tf.contrib.cudnn_rnn.CudnnLSTM(n_layers, n_hidden, n_input)
-    outputs, states1, states2 = rnn_cell(
-        is_training=True,
-        input_data=x,
-        input_h=input_h['out'],
-        input_c=input_c['out'],
-        params=params['out'])
-    # Linear activation, using rnn inner loop last output
-    return tf.matmul(outputs[-1], weights['out']) + biases['out']
+outputs, states1, states2 = model(
+    is_training=True,
+    input_data=x,
+    input_h=input_h['out'],
+    input_c=input_c['out'],
+    params=params['out'])
 
-pred = RNN(x, weights, biases, input_h, input_c, params)
+# Linear activation, using rnn inner loop last output
+pred = tf.matmul(outputs[-1], weights['out']) + biases['out']
+
+
+#Evaluate network
+################################################################################
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
-tf.summary.scalar('cost', cost)
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate,
-                                   ).minimize(cost)
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+tf.summary.scalar('cost', cost)
 tf.summary.scalar('acc', accuracy)
 init = tf.global_variables_initializer()
 merged = tf.summary.merge_all()
-
 init = tf.global_variables_initializer()
 saver = tf.train.Saver()
 
