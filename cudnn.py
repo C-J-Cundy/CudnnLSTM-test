@@ -55,8 +55,10 @@ n_hidden = 256
 n_input = 257
 n_classes = 2
 n_layers = 1
-sn = math.sqrt(3.0)/math.sqrt(n_input+n_hidden) #Glorot initialisation, var(p(x))
+sn = math.sqrt(1.0)/math.sqrt(n_input+n_hidden) #Glorot initialisation, var(p(x))
 forget_gate_init = 5.0                          # = 1/(n_in). We use uniform p(x)
+clip = 4 #We use gradient clipping to stop the gradient exploding initially
+         #For the much larger networks
 
 
 #Training Parameters
@@ -149,7 +151,10 @@ pred = tf.matmul(outputs[-1], weights['out']) + biases['out']
 #Evaluate network
 ################################################################################
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+optimizer_0 = tf.train.AdamOptimizer(learning_rate=learning_rate)
+raw_gradients, variables = zip(*optimizer_0.compute_gradients(cost))
+gradients, _ = tf.clip_by_global_norm(raw_gradients, clip)
+optimizer = optimizer_0.apply_gradients(zip(gradients, variables))
 correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 tf.summary.scalar('cost', cost)
