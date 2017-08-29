@@ -51,14 +51,14 @@ def gen_2b_data(p, q, bs):
 
 #Network Parameters
 n_steps = 8192
-n_hidden = 256
-n_input = 257
+n_hidden = 128
+n_input = 129
 n_classes = 2
 n_layers = 1
 sn = math.sqrt(1.0)/math.sqrt(n_input+n_hidden) #Glorot initialisation, var(p(x))
 forget_gate_init = 5.0                          # = 1/(n_in). We use uniform p(x)
 clip = 4 #We use gradient clipping to stop the gradient exploding initially
-         #For the much larger networks
+         #for the much larger networks
 
 
 #Training Parameters
@@ -148,7 +148,7 @@ outputs, states1, states2 = model(
 pred = tf.matmul(outputs[-1], weights['out']) + biases['out']
 
 
-#Evaluate network
+#Evaluate network, run adam and clip gradients
 ################################################################################
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
 optimizer_0 = tf.train.AdamOptimizer(learning_rate=learning_rate)
