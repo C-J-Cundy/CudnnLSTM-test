@@ -73,12 +73,8 @@ y = tf.placeholder("float", [batch_size, n_classes])
 
 #Define weights & rnn initial states
 with tf.variable_scope(None, default_name='linear_layer'):
-    W = {
-        'out': tf.Variable(tf.random_normal([n_hidden, n_classes]), dtype='float')
-    }
-    b = {
-        'out': tf.Variable(tf.random_normal([n_classes]), dtype='float')
-    }
+    W1 = tf.Variable(tf.random_normal([n_hidden, n_classes]), dtype='float')
+    b1 = tf.Variable(tf.random_normal([n_classes]), dtype='float')
 
 #Initialise all weights & biases for the cudnnlstm: set weights according to Glorot
 #There are eight weights and biases per layer in the LSTM. Described in 
@@ -87,13 +83,9 @@ with tf.variable_scope(None, default_name='linear_layer'):
 #This seems redundant - I'm not sure why CUDA is implemented in this way.
 
 with tf.variable_scope(None, default_name='fc'):
-    W = {
-        'out': tf.Variable(tf.random_uniform([n_input, n_hidden],
+    W = tf.Variable(tf.random_uniform([n_input, n_hidden],
                                              minval=-sn, maxval=sn), dtype='float')
-    }
-    b = {
-        'out': tf.Variable(tf.zeros([n_hidden]), dtype='float')
-    }
+    b = tf.Variable(tf.zeros([n_hidden]), dtype='float')
 
 #Generate network
 ################################################################################
@@ -101,7 +93,7 @@ outputs = linear_surrogate_lstm(x, n_hidden, name='ls-lstm')
 
 # Linear activation, using rnn inner loop last output
 with tf.variable_scope(None, default_name='linear_layer'):
-    pred = tf.matmul(outputs[-1], weights['out']) + biases['out']
+    pred = tf.matmul(outputs[-1], W1) + b1
     
 #Evaluate network, run adam and clip gradients
 ################################################################################
