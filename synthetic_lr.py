@@ -2,15 +2,10 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.contrib import rnn
 import math
+from layers import linear_surrogate_lstm
 
-#We construct an RNN to solve problem 2b in the original LSTM paper
-#(Hochreiter & Schmidhuber 1997). We implement the LSTM layer using
-#the CUDA kernel provided by tensorflow. There is little available
-#documentation on using the CudnnLSTM bindings, so this provides a minimal
-#working example for future reference.
-
-#As far as I can tell this is the first nontrivial example of the CudnnLSTM
-#bindings being used on the web. 
+#We use an experimental parallel linear recurrence architecture for computing
+#the passes
 
 #We wish to train a network to classify sequences of random vectors on the unit
 #cube, where the first vector's sign determines the (binary) classification of
@@ -70,84 +65,44 @@ display_step = 10
 
 #Initialise variables
 ################################################################################
-#Generate the lstm hook to CUDA
-model = tf.contrib.cudnn_rnn.CudnnLSTM(n_layers, n_hidden, n_input)
+#Generate the lstm hook to PLR
 
 # tf Graph input
 x = tf.placeholder("float", [n_steps, batch_size, n_input])
 y = tf.placeholder("float", [batch_size, n_classes])
 
 #Define weights & rnn initial states
-weights = {
-    'out': tf.Variable(tf.random_normal([n_hidden, n_classes]), dtype='float')
-}
-biases = {
-    'out': tf.Variable(tf.random_normal([n_classes]), dtype='float')
-}
-#Initial state of the LSTM at each batch, we don't let this be trained. 
-input_h = {
-    'out': tf.Variable(tf.zeros([n_layers, batch_size, n_hidden]), dtype='float',
-                       trainable=False)
-}
-input_c = {
-    'out': tf.Variable(tf.zeros([n_layers, batch_size, n_hidden]), dtype='float',
-                       trainable=False)
-}
+with tf.variable_scope(None, default_name='linear_layer'):
+    W = {
+        'out': tf.Variable(tf.random_normal([n_hidden, n_classes]), dtype='float')
+    }
+    b = {
+        'out': tf.Variable(tf.random_normal([n_classes]), dtype='float')
+    }
+
 #Initialise all weights & biases for the cudnnlstm: set weights according to Glorot
 #There are eight weights and biases per layer in the LSTM. Described in 
 #http://docs.nvidia.com/deeplearning/sdk/cudnn-user-guide/index.html#cudnnRNNMode_t
 #There are two biases which sum to give the biases in the canonical form of the LSTM
 #This seems redundant - I'm not sure why CUDA is implemented in this way.
 
-weight_list = []
-bias_list = []
-for n in range(4):
-    weight_list.append(np.float32(
-        np.random.uniform(low=-sn, high=sn,
-                          size=[n_hidden, n_input])))
+with tf.variable_scope(None, default_name='fc'):
+    W = {
+        'out': tf.Variable(tf.random_uniform([n_input, n_hidden],
+                                             minval=-sn, maxval=sn), dtype='float')
+    }
+    b = {
+        'out': tf.Variable(tf.zeros([n_hidden]), dtype='float')
+    }
 
-for n in range(4,8):
-    weight_list.append(np.float32(
-        np.random.uniform(low=-sn, high=sn,
-                          size=[n_hidden, n_hidden])))
-
-for n in range(8):
-    bias_list.append(np.float32(
-        np.zeros([n_hidden])))
-
-bias_list[5] = np.float32(
-        forget_gate_init*np.ones([n_hidden]))
-
-#Initialize the opaque parameter buffer used to handle the cudnnlstm params
-#If we try to pass the canonical_to_params tensor through the call graph,
-#we fail because the size must be known statically. The easiest way to get
-#around this (though hacky) is to get the values out by casting to an np array
-#and then initialising a tensor with those values.
-
-params_size_t = (  (n_input * n_hidden * 4) 
-                 + (n_hidden * n_hidden * 4)
-                 + (n_hidden * 2 * 4))
-flat_params = model.canonical_to_params(weight_list, bias_list)
-flat_params_as_ndarray = tf.Session().run(flat_params) 
-
-params = {
-    'out': tf.get_variable('param_buffer', initializer=tf.constant(
-        flat_params_as_ndarray))
-}
 #Generate network
 ################################################################################
-
-outputs, states1, states2 = model(
-    is_training=True,
-    input_data=x,
-    input_h=input_h['out'],
-    input_c=input_c['out'],
-    params=params['out'])
+outputs = linear_surrogate_lstm(x, n_hidden, name='ls-lstm')
 
 # Linear activation, using rnn inner loop last output
-pred = tf.matmul(outputs[-1], weights['out']) + biases['out']
-
-
+with tf.variable_scope(None, default_name='linear_layer'):
+    pred = tf.matmul(outputs[-1], weights['out']) + biases['out']
+    
 #Evaluate network, run adam and clip gradients
 ################################################################################
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
