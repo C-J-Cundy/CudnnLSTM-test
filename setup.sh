@@ -1,7 +1,8 @@
 #bin/bash
-#This script fetches the necessary 
-
-sudo apt-get --assume-yes install emacs
+#This script fetches the necessary dependencies and editor configs
+sudo add-apt-repository ppa:kelleyk/emacs
+sudo apt-get update
+sudo apt-get --assume-yes install emacs25
 git clone https://github.com/C-J-Cundy/CudnnLSTM-test.git
 git clone https://github.com/C-J-Cundy/.dotfiles.git
 sudo mv ./.dotfiles/.emacs.d ~
