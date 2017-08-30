@@ -72,20 +72,37 @@ x = tf.placeholder("float", [n_steps, batch_size, n_input])
 y = tf.placeholder("float", [batch_size, n_classes])
 
 #Define weights & rnn initial states
-with tf.variable_scope(None, default_name='linear_layer'):
-    W1 = tf.Variable(tf.random_normal([n_hidden, n_classes]), dtype='float')
-    b1 = tf.Variable(tf.random_normal([n_classes]), dtype='float')
 
-#Initialise all weights & biases for the cudnnlstm: set weights according to Glorot
-#There are eight weights and biases per layer in the LSTM. Described in 
+with tf.variable_scope('linear_layer'):
+    tf.get_variable_scope().reuse == True
+    W1 = tf.get_variable('W1', initializer=
+                         tf.random_normal([n_hidden, n_classes]), dtype='float')
+    b1 = tf.get_variable('b1', initializer=tf.zeros([n_classes]), dtype='float')
+
+#Initialise all weights & biases for the plrlstm: set weights according to Glorot
+#There are eight weights and 4 biases per layer in the LSTM. Described in
 #http://docs.nvidia.com/deeplearning/sdk/cudnn-user-guide/index.html#cudnnRNNMode_t
 #There are two biases which sum to give the biases in the canonical form of the LSTM
-#This seems redundant - I'm not sure why CUDA is implemented in this way.
 
-with tf.variable_scope(None, default_name='fc'):
-    W = tf.Variable(tf.random_uniform([n_input, n_hidden],
-                                             minval=-sn, maxval=sn), dtype='float')
-    b = tf.Variable(tf.zeros([n_hidden]), dtype='float')
+with tf.variable_scope('fc'): #GILR layer params
+    tf.get_variable_scope().reuse == True
+    W = tf.get_variable('W', initializer=tf.random_uniform([n_input, n_hidden],
+                                                           minval=-sn, maxval=sn),
+                        dtype='float')
+    b = tf.get_variable('b', initializer=tf.zeros([n_hidden]), dtype='float')
+
+with tf.variable_scope('pre_fc'): #preact params. specify separately so we can
+    tf.get_variable_scope().reuse == True    #set forget bias
+    W = tf.get_variable('W',
+                        initializer=tf.random_uniform([n_input+n_hidden, 4*n_hidden],
+                                                      minval=-sn, maxval=sn), dtype='float')
+    init = tf.constant(forget_gate_init*np.ones((n_hidden)), dtype='float32')
+    f_bias = tf.get_variable('f_bias', initializer= init, dtype='float')
+    other_bias = tf.get_variable('other_bias',
+                                 initializer=tf.zeros([3*n_hidden]), dtype='float')
+    b = tf.get_variable('b', initializer=tf.concat([f_bias, other_bias],axis=0),
+                        dtype='float')
+
 
 #Generate network
 ################################################################################
@@ -138,3 +155,6 @@ with tf.device("gpu:0"):
             step += 1
                     
         print("Optimization Finished!")
+
+
+        
