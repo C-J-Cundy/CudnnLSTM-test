@@ -13,4 +13,5 @@ cd plr/linear_recurrent_net
 sudo cp /usr/local/cuda/lib64/libcudart* /usr/lib/
 ./build.sh
 export PYTHONPATH=~/plr/linear_recurrent_net:$PYTHONPATH
+alias emacs=emacs25
 
