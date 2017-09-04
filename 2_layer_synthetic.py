@@ -157,7 +157,7 @@ with tf.device("gpu:0"):
                 if step % (display_step*10) == 0: #Save the model every so often
                     saver.save(sess, './CudnnLSTM_'+str(n_steps)+'_steps_model', global_step=step)
                 if acc_list == [1.0]*5:
-                    print "Converged after {} iterations".format(step)
+                    print "Converged after {} iterations".format(step*batch_size)
                     break
                 else:
                     acc_list.append(acc)
