@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.contrib import rnn
 import math
-from layers import linear_surrogate_lstm
+from layers import linear_surrogate_lstm, gilr_layer
 
 #We use an experimental parallel linear recurrence architecture for computing
 #the passes
