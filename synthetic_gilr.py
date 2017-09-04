@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.contrib import rnn
 import math
-from layers import linear_surrogate_lstm, gilr_layer
+from layers_new import linear_surrogate_lstm, gilr_layer
 
 #We use an experimental parallel linear recurrence architecture for computing
 #the passes
@@ -52,7 +52,7 @@ n_classes = 2
 n_layers = 1
 sn = math.sqrt(1.0)/math.sqrt(n_input+n_hidden) #Glorot initialisation, var(p(x))
 forget_gate_init = 5.0                          # = 1/(n_in). We use uniform p(x)
-clip = 4 #We use gradient clipping to stop the gradient exploding initially
+clip = 20 #We use gradient clipping to stop the gradient exploding initially
          #for the much larger networks
 
 
