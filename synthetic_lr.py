@@ -3,6 +3,7 @@ import numpy as np
 from tensorflow.contrib import rnn
 import math
 from layers_new import linear_surrogate_lstm
+import time
 
 #We use an experimental parallel linear recurrence architecture for computing
 #the passes
@@ -130,7 +131,8 @@ merged = tf.summary.merge_all()
 init = tf.global_variables_initializer()
 saver = tf.train.Saver()
 
-
+start = time.time()
+acc_list = [0]*5
 with tf.device("gpu:0"):
     with tf.Session() as sess:
         sess.run(init)
@@ -154,6 +156,12 @@ with tf.device("gpu:0"):
                       "{:.5f}".format(acc))
                 if step % (display_step*10) == 0: #Save the model every so often
                     saver.save(sess, './CudnnLSTM_'+str(n_steps)+'_steps_model', global_step=step)
+                if acc_list == [1.0]*5:
+                    print "Converged after {} iterations and {} seconds".format(step*batch_size, time.time() - start)
+                    break
+                else:
+                    acc_list.append(acc)
+                    acc_list.pop(0)                    
             step += 1
                     
         print("Optimization Finished!")
