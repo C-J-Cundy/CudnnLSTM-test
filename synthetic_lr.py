@@ -45,9 +45,9 @@ def gen_2b_data(p, q, bs):
     return x_out[:, perm, :], y_out[perm]
 
 #Network Parameters
-n_steps = 8192
-n_hidden = 128
-n_input = 129
+n_steps = 512
+n_hidden = 512
+n_input = 512
 n_classes = 2
 n_layers = 1
 sn = math.sqrt(1.0)/math.sqrt(n_input+n_hidden) #Glorot initialisation, var(p(x))
@@ -57,9 +57,9 @@ clip = 4 #We use gradient clipping to stop the gradient exploding initially
 
 
 #Training Parameters
-learning_rate = 0.002
+learning_rate = 0.0001
 training_iters = 5000000
-batch_size = 128
+batch_size = 8
 display_step = 10
 
 
