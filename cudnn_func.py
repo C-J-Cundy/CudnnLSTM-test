@@ -52,7 +52,8 @@ def gen_2b_data(p, q, bs):
 def cudnn(n_steps=1024, n_hidden=1024, batch_size=8, n_layers=1):
     #Network Parameters
     n_classes = 2
-    sn = 0.05 #Glorot initialisation, var(p(x))
+    n_input = n_hidden + 1
+    sn = 1/sqrt(n_hidden) #Glorot initialisation, var(p(x))
     forget_gate_init = 5.0                          # = 1/(n_in). We use uniform p(x)
     clip = 20 #We use gradient clipping to stop the gradient exploding initially
              #for the much larger networks
@@ -132,21 +133,6 @@ def cudnn(n_steps=1024, n_hidden=1024, batch_size=8, n_layers=1):
             flat_params_as_ndarray))
     }
 
-    if n_layers == 2:
-        #We need to change the dimensionality of the input here
-        model2 = tf.contrib.cudnn_rnn.CudnnLSTM(n_layers, n_hidden, n_input)    
-        weight_list = []
-        for n in range(0,8):
-            weight_list.append(np.float32(
-                np.random.uniform(low=-sn, high=sn,
-                                  size=[n_hidden, n_hidden])))
-        flat_params_as_ndarray = tf.Session().run(model.canonical_to_params(
-            weight_list, bias_list))         
-        params2 = {
-            'out': tf.get_variable('param_buffer_2', initializer=tf.constant(
-                flat_params_as_ndarray))
-        }
-
 
     #Generate network
     ################################################################################
@@ -158,13 +144,6 @@ def cudnn(n_steps=1024, n_hidden=1024, batch_size=8, n_layers=1):
         input_c=input_c['out'],
         params=params['out'])
 
-    if n_layers == 2:
-        outputs, states1, states2 = model2(
-            is_training=True,
-            input_data=outputs,
-            input_h=input_h['out'],
-            input_c=input_c['out'],
-            params=params2['out'])
 
     # Linear activation, using rnn inner loop on last output
     pred = tf.matmul(outputs[-1], weights['out']) + biases['out']    
