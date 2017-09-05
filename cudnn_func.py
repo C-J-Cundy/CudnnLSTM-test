@@ -1,8 +1,3 @@
-import tensorflow as tf
-import numpy as np
-from tensorflow.contrib import rnn
-import math
-
 #We construct an RNN to solve problem 2b in the original LSTM paper
 #(Hochreiter & Schmidhuber 1997). We implement the LSTM layer using
 #the CUDA kernel provided by tensorflow. There is little available
@@ -50,9 +45,15 @@ def gen_2b_data(p, q, bs):
     return x_out[:, perm, :], y_out[perm]
 
 def cudnn(n_steps=1024, n_hidden=1024, batch_size=8, n_layers=1):
+    import tensorflow as tf
+    import numpy as np
+    from tensorflow.contrib import rnn
+    import math
+    import time
     #Network Parameters
+    tf.reset_default_graph()
     n_classes = 2
-    n_input = n_hidden + 1
+    n_input = n_steps + 1
     sn = 1/math.sqrt(n_hidden) #Glorot initialisation, var(p(x))
     forget_gate_init = 5.0                          # = 1/(n_in). We use uniform p(x)
     clip = 20 #We use gradient clipping to stop the gradient exploding initially
@@ -62,7 +63,6 @@ def cudnn(n_steps=1024, n_hidden=1024, batch_size=8, n_layers=1):
     #Training Parameters
     learning_rate = 0.0001
     training_iters = 5000000
-    batch_size = 8
     display_step = 10
 
 
@@ -207,10 +207,10 @@ def cudnn(n_steps=1024, n_hidden=1024, batch_size=8, n_layers=1):
                         saver.save(sess, './CudnnLSTM_'+str(n_steps)+'_steps_model', global_step=step)
                     if acc_list == [1.0]*5:
                         print "Converged after {} iterations and {} seconds".format(step*batch_size, time.time() - start)
-                    break
-                else:
-                    acc_list.append(acc)
-                    acc_list.pop(0)     
+                        break
+                    else:
+                        acc_list.append(acc)
+                        acc_list.pop(0)     
                 step += 1
 
             print("Optimization Finished!")
