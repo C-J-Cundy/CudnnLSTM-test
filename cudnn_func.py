@@ -1,3 +1,8 @@
+import tensorflow as tf
+import numpy as np
+from tensorflow.contrib import rnn
+import math
+import time
 #We construct an RNN to solve problem 2b in the original LSTM paper
 #(Hochreiter & Schmidhuber 1997). We implement the LSTM layer using
 #the CUDA kernel provided by tensorflow. There is little available
@@ -45,11 +50,6 @@ def gen_2b_data(p, q, bs):
     return x_out[:, perm, :], y_out[perm]
 
 def cudnn(n_steps=1024, n_hidden=1024, batch_size=8, n_layers=1):
-    import tensorflow as tf
-    import numpy as np
-    from tensorflow.contrib import rnn
-    import math
-    import time
     #Network Parameters
     tf.reset_default_graph()
     n_classes = 2
