@@ -50,21 +50,22 @@ def gen_2b_data(p, q, bs):
     return x_out[:, perm, :], y_out[perm]
 
 #Network Parameters
-n_steps = 8192
-n_hidden = 128
-n_input = 129
+n_steps = 1024
+n_hidden = 1024
+n_input = 1025
 n_classes = 2
 n_layers = 1
-sn = math.sqrt(1.0)/math.sqrt(n_input+n_hidden) #Glorot initialisation, var(p(x))
+#sn = math.sqrt(1.0)/math.sqrt(n_input+n_hidden) #Glorot initialisation, var(p(x))
+sn = 0.05 #Glorot initialisation, var(p(x))
 forget_gate_init = 5.0                          # = 1/(n_in). We use uniform p(x)
-clip = 4 #We use gradient clipping to stop the gradient exploding initially
+clip = 20 #We use gradient clipping to stop the gradient exploding initially
          #for the much larger networks
 
 
 #Training Parameters
-learning_rate = 0.002
+learning_rate = 0.0001
 training_iters = 5000000
-batch_size = 128
+batch_size = 8
 display_step = 10
 
 
@@ -134,6 +135,14 @@ params = {
     'out': tf.get_variable('param_buffer', initializer=tf.constant(
         flat_params_as_ndarray))
 }
+
+if n_layers == 2:
+    params2 = {
+        'out': tf.get_variable('param_buffer_2', initializer=tf.constant(
+            flat_params_as_ndarray))
+    }
+    model2 = tf.contrib.cudnn_rnn.CudnnLSTM(n_layers, n_hidden, n_input)
+
 #Generate network
 ################################################################################
 
@@ -144,9 +153,16 @@ outputs, states1, states2 = model(
     input_c=input_c['out'],
     params=params['out'])
 
-# Linear activation, using rnn inner loop last output
-pred = tf.matmul(outputs[-1], weights['out']) + biases['out']
+if n_layers == 2:
+    outputs, states1, states2 = model2(
+        is_training=True,
+        input_data=outputs,
+        input_h=input_h['out'],
+        input_c=input_c['out'],
+        params=params2['out'])
 
+# Linear activation, using rnn inner loop on last output
+pred = tf.matmul(outputs[-1], weights['out']) + biases['out']    
 
 #Evaluate network, run adam and clip gradients
 ################################################################################
