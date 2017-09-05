@@ -99,25 +99,38 @@ def cudnn(n_steps=1024, n_hidden=1024, batch_size=8, n_layers=1):
 
     weight_list = []
     bias_list = []
-    for m in range(0, n_layers):
-        for n in range(4):
-            weight_list.append(np.float32(
-                np.random.uniform(low=-sn, high=sn,
-                                  size=[n_hidden, n_input])))
+    for n in range(4):
+        weight_list.append(np.float32(
+            np.random.uniform(low=-sn, high=sn,
+                              size=[n_hidden, n_input])))
 
-        for n in range(4,8):
+    for n in range(4,8):
+        weight_list.append(np.float32(
+            np.random.uniform(low=-sn, high=sn,
+                              size=[n_hidden, n_hidden])))
+    if n_layers == 2:
+        for n in range(4):
             weight_list.append(np.float32(
                 np.random.uniform(low=-sn, high=sn,
                                   size=[n_hidden, n_hidden])))
 
-        bias_to_add = []
-        for n in range(8):
-            bias_to_add.append(np.float32(
-                np.zeros([n_hidden])))
+        for n in range(4,8):
+            weight_list.append(np.float32(
+                np.random.uniform(low=-sn, high=sn,
+                                  size=[n_hidden, n_hidden])))        
 
-        bias_to_add[5] = np.float32(
-                forget_gate_init*np.ones([n_hidden]))
-        bias_list.append(bias_to_add)
+    for n in range(8):
+        bias_list.append(np.float32(
+            np.zeros([n_hidden])))
+    if n_layers == 2:
+        for n in range(8):        
+            bias_list.append(np.float32(
+                np.zeros([n_hidden])))
+        bias_list[13] = np.float32(
+            forget_gate_init*np.ones([n_hidden]))
+    
+    bias_list[5] = np.float32(
+            forget_gate_init*np.ones([n_hidden]))
 
     #Initialize the opaque parameter buffer used to handle the cudnnlstm params
     #If we try to pass the canonical_to_params tensor through the call graph,
