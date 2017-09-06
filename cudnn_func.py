@@ -49,11 +49,10 @@ def gen_2b_data(p, q, bs):
     perm = np.random.permutation(bs) #Shuffle order of outputs
     return x_out[:, perm, :], y_out[perm]
 
-def cudnn(n_steps=1024, n_hidden=1024, batch_size=8, n_layers=1):
+def cudnn(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
     #Network Parameters
     tf.reset_default_graph()
     n_classes = 2
-    n_input = n_steps + 1
     sn = 1/math.sqrt(n_hidden) #Glorot initialisation, var(p(x))
     forget_gate_init = 5.0                          # = 1/(n_in). We use uniform p(x)
     clip = 20 #We use gradient clipping to stop the gradient exploding initially
