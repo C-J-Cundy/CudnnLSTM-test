@@ -1,12 +1,45 @@
 import numpy as np
 from cudnn_func import cudnn
+from ls_lstm_func import ls_lstm
 
-iter_list = []
-times_list = []
+num_trials = 5
+n_steps = [1024, 8192, 1048576]
 
-for _ in range(5):
-    a, b = cudnn(1024, 1024, 8, 2)
-    iter_list.append(a)
-    times_list.append(b)
+for n_step in n_steps:
+    #Do the iteration for the  2-layer cudnn
+    n_hidden = 512
+    iter_list = []
+    times_list = []
+    for _ in range(num_trials):
+        a, b = cudnn(1024, n_hidden, 128, 8, 2)
+        iter_list.append(a)
+        times_list.append(b)
+    print """After {} trials for the 2-layer cudnn, with sequence length
+    {}, n_hidden {}, on average took {} pm {} iterations and {} pm {} seconds
+    to converge""".format(num_trials, n_step, n_hidden, np.mean(iter_list),
+                          np.std(iter_list), np.mean(times_list), np.std(times_list))
+    
+    n_hidden = 1024
+    iter_list = []
+    times_list = []
+    for _ in range(num_trials):
+        a, b = cudnn(1024, n_hidden, 128, 8, 1)
+        iter_list.append(a)
+        times_list.append(b)
+    print """After {} trials for the one-layer cudnn, with sequence length
+    {}, n_hidden {}, on average took {} pm {} iterations and {} pm {} seconds
+    to converge""".format(num_trials, n_step, n_hidden, np.mean(iter_list),
+                          np.std(iter_list), np.mean(times_list), np.std(times_list))
 
-print iter_list, times_list
+
+    n_hidden = 512
+    iter_list = []
+    times_list = []
+    for _ in range(num_trials):
+        a, b = ls_lstm(1024, n_hidden, 128, 8, 2)
+        iter_list.append(a)
+        times_list.append(b)
+    print """After {} trials for the one-layer cudnn, with sequence length
+    {}, n_hidden {}, on average took {} pm {} iterations and {} pm {} seconds
+    to converge""".format(num_trials, n_step, n_hidden, np.mean(iter_list),
+                          np.std(iter_list), np.mean(times_list), np.std(times_list))      
