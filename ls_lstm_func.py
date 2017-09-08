@@ -45,6 +45,25 @@ def gen_2b_data(p, q, bs):
     perm = np.random.permutation(bs) #Shuffle order of outputs
     return x_out[:, perm, :], y_out[perm]
 
+
+def gen_2b_data_1(p, q):
+    """Generates data with a batch size of 1"""
+    x_out = np.zeros((p+1, 1, q+1))
+    y_out = np.zeros((1,2))
+    seq_class = np.random.random_integers(2) - 1
+    if seq_class == 0:
+        x_out[:,0,:] = np.eye(q+1)[np.random.choice(q+1, p+1)] #Random one-hot
+        x_out[0,0,:] = np.zeros(q+1) 
+        x_out[0,0,0] = 1 #Set indicator component
+        y_out[0, 0] = 1 
+    else:
+        x_out[:,0,:] = np.eye(q+1)[np.random.choice(q+1, p+1)]
+        x_out[0,0,:] = np.zeros(q+1)
+        x_out[0,0,0] = -1
+        y_out[0, 1] = 1
+    return x_out, y_out
+
+
 def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
         #Network Parameters
     tf.reset_default_graph()
@@ -116,7 +135,10 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
             test_writer = tf.summary.FileWriter('./CudnnLSTM_'+str(n_steps)+'_stepslog', sess.graph)
             # Keep training until reach max iterations
             while step * batch_size < training_iters:
-                batch_x, batch_y = gen_2b_data(n_steps-1, n_input-1, batch_size)
+                if batch_size == 1:
+                    batch_x, batch_y = gen_2b_data_1(n_steps-1, n_input-1)
+                else:
+                    batch_x, batch_y = gen_2b_data(n_steps-1, n_input-1, batch_size)
                 # Run optimization op (backprop)
                 sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
                 if step % display_step == 0:
