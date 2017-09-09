@@ -91,11 +91,10 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
 
     #Define weights & rnn initial states
 
-    with tf.variable_scope('linear_layer'):
-        tf.get_variable_scope().reuse == True
-        W1 = tf.get_variable('W1', initializer=
-                             tf.random_normal([n_hidden, n_classes]), dtype='float')
-        b1 = tf.get_variable('b1', initializer=tf.zeros([n_classes]), dtype='float')
+    tf.get_variable_scope().reuse == True
+    W1 = tf.get_variable('W1', initializer=
+                         tf.random_normal([n_hidden, n_classes]), dtype='float')
+    b1 = tf.get_variable('b1', initializer=tf.zeros([n_classes]), dtype='float')
 
     #Initialise all weights & biases for the plrlstm: set weights according to Glorot
     #There are eight weights and 4 biases per layer in the LSTM. Described in
@@ -104,11 +103,11 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
 
     #Generate network
     ################################################################################
-    outputs = linear_surrogate_lstm(x, n_hidden, name='ls-lstm')
+    layer1 = linear_surrogate_lstm(x, n_hidden, name='ls-lstm')
+    outputs = linear_surrogate_lstm(x, n_hidden, name='ls-lstm2')    
 
     # Linear activation, using rnn inner loop last output
-    with tf.variable_scope(None, default_name='linear_layer'):
-        pred = tf.matmul(outputs[-1], W1) + b1
+    pred = tf.matmul(outputs[-1], W1) + b1
 
     #Evaluate network, run adam and clip gradients
     ################################################################################
