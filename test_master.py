@@ -12,7 +12,7 @@ for n_step in n_steps:
     iter_list = []
     times_list = []
     for _ in range(num_trials):
-        a, b = cudnn(1024, n_hidden, 128, 16, 1)
+        a, b = cudnn(n_step, n_hidden, 128, 16, 1)
         iter_list.append(a)
         times_list.append(b)
         print "Took {} seconds to converge after {} iterations".format(b, a)        
@@ -40,7 +40,7 @@ for n_step in n_steps:
     iter_list = []
     times_list = []
     for _ in range(num_trials):
-        a, b = ls_lstm(1024, n_hidden, 128, 8, 2)
+        a, b = ls_lstm(n_step, n_hidden, 128, 8, 2)
         iter_list.append(a)
         times_list.append(b)
     print """After {} trials for the one-layer cudnn, with sequence length
