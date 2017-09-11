@@ -104,7 +104,7 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
     #Generate network
     ################################################################################
     layer1 = linear_surrogate_lstm(x, n_hidden, name='ls-lstm')
-    outputs = linear_surrogate_lstm(x, n_hidden, name='ls-lstm2')    
+    outputs = linear_surrogate_lstm(layer1, n_hidden, name='ls-lstm2')    
 
     # Linear activation, using rnn inner loop last output
     pred = tf.matmul(outputs[-1], W1) + b1
