@@ -4,7 +4,7 @@ from ls_lstm_func import ls_lstm
 
 num_trials = 5 
 n_steps = [1024, 8192, 1048576]
-bs_dict = {1024: 8, 1024:4, 1048576} #Batch sizes that work best: found by quick search.
+bs_dict = {1024: 8, 1024:4, 1048576:1} #Batch sizes that work best: found by quick search.
 n_hidden_dict = {1024: 512, 8192: 512, 1048576: 64} #Need to reduce the num of hidden layers
                                                     #So that the model fits in memory
 for n_step in n_steps:
