@@ -151,13 +151,13 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
                     summary, _ = sess.run([merged, cost], feed_dict={x: batch_x, y: batch_y})
                     summary, _ = sess.run([merged, accuracy], feed_dict={x: batch_x, y: batch_y})
                     test_writer.add_summary(summary, step)
-                    print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
+                    print("Iter " + str(step) + ", Minibatch Loss= " + \
                           "{:.6f}".format(loss) + ", Training Accuracy= " + \
                           "{:.5f}".format(acc))
                     if step % (display_step*10) == 0: #Save the model every so often
                         saver.save(sess, './CudnnLSTM_'+str(n_steps)+'_steps_model', global_step=step)
                     if acc_list == [1.0]*conv_criterion:
-                        print "Converged after {} iterations and {} seconds".format(step*batch_size, time.time() - start)
+                        print "Converged after {} iterations and {} seconds".format(step, time.time() - start)
                         break
                     else:
                         acc_list.append(acc)
@@ -165,4 +165,4 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
                 step += 1
 
             print("Optimization Finished!")
-    return step*batch_size, time.time()-start
+    return step, time.time()-start
