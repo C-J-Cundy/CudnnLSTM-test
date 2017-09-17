@@ -5,6 +5,7 @@ from ls_lstm_func import ls_lstm
 num_trials = 5 
 n_steps = [1024, 8192, 1048576]
 bs_cudn_dict = {1024: 8, 8192:4, 1048576:1} #Batch sizes that work best: found by quick search.
+bs_lslstm_dict = {1024: 8, 8192:4, 1048576:1} #Batch sizes that work best: found by quick search.
 n_hidden_dict = {1024: 512, 8192: 512, 1048576: 64} #Need to reduce the num of hidden layers
                                                     #So that the model fits in memory
 for n_step in n_steps:
@@ -14,7 +15,7 @@ for n_step in n_steps:
     iter_list = []
     times_list = []
     for _ in range(num_trials):
-        a, b = cudnn(n_step, n_hidden, 128, bs_dict[n_step], 2)
+        a, b = cudnn(n_step, n_hidden, 128, bs_cudn_dict[n_step], 2)
         iter_list.append(a)
         times_list.append(b)
         print "Took {} seconds to converge after {} iterations".format(b, a)
@@ -28,7 +29,7 @@ for n_step in n_steps:
     iter_list = []
     times_list = []
     for _ in range(num_trials):
-        a, b = ls_lstm(n_step, n_hidden, 128, bs_dict[n_step], 2)
+        a, b = ls_lstm(n_step, n_hidden, 128, bs_lslstm_dict[n_step], 2)
         iter_list.append(a)
         times_list.append(b)
     print """After {} trials for the one-layer ls-lstm, with sequence length
