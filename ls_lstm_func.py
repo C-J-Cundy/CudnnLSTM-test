@@ -78,6 +78,7 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
     learning_rate = 0.0001
     training_iters = 5000000
     display_step = 10
+    id_num = np.random.uniform(0, 50) #To distinguish from other runs of identical models
 
 
     #Initialise variables
