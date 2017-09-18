@@ -1,0 +1,111 @@
+\documentclass[letterpaper, 10 pt]{article}
+\usepackage[margin=0.75in]{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\usepackage{tikz}
+\usepackage{caption}
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{gensymb}
+\usepackage{url}
+\usepackage{gensymb}
+\usepackage{lmodern}
+\usepackage{wrapfig}
+\usepackage{appendix}
+\usepackage{hyperref}
+\usepackage{stmaryrd}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{qtree}
+\usepackage{booktabs}
+\usepackage[style=numeric, citestyle=authoryear]{biblatex}
+\usepackage[ruled,vlined]{algorithm2e}
+\bibliography{/Users/Chris/Documents/Berkeley/CHCAI/Key Papers/collection.bib}
+\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{decorations.markings}
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{arrows}
+\newcommand{\midarrow}{\tikz \draw[-triangle 90] (0,0) -- +(.1,0);}
+\tikzset{snake it/.style={decorate, decoration=snake}}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+\title{Synthetic task: write up and results}
+\author{Chris Cundy}
+\begin{document}
+\maketitle
+
+\maketitle
+
+\section{Synthetic Experiment}
+
+\begin{itemize}
+\item{We wanted to show that the LS-LSTM was able to do well at the traditional
+    LSTM benchmarks, such as the forgetting task in the original LSTM
+    paper. Unfortunately the LSTM is very good at those tasks and the linear nature
+    of the linear surrogate meant that it was hard to get it to converge. However, a
+    two-layered systems of LS-LSTMs were able to have better performance than the
+    fast cudnnlstm implementation, even on this task which is specifically designed
+    to be amenable to LSTMs.}
+\end{itemize}
+
+\section{The Problem}
+We have an alphabet of size \(p\) with each character represented as a
+particular one-hot vector in this space. We input a sequence of \(n\) of these
+vectors, chosen at random (with replacement). The first vector in the sequence
+is always the same, up to the sign of the component (i.e. it is \(\pm p_0
+\). The two signs on the first component separate the sequences into two
+sets. The whole sequence is fed into the LSTM and we aim to learn to classify
+the sequences. This requires remembering the first element over the length of the
+sequence. Due to the large throughput of the LS-LSTM, we would expect that it
+would do better when the sequence length is large. In the original formulation
+of the problem, \(p\) is set equal to \(n\). Since this would make the size of the
+input data grow impracticaly large as \(\mathcal{O}(n^2)\) for long sequences, we
+fix \(p = 128\) and vary \(n\).
+
+
+We generated three sets of data: for \(n\) equal to 1,024, 8,192, and
+1,048,576. For each of these we compared a two-layer LS-LSTM with 512 hidden
+units to a canonical LSTM network with roughly the same number of
+parameters. We could imagine using a two-layer LSTM with 512 hidden units in
+each layer, or a one-layer LSTM with 1024 hidden units.
+
+Initial experiments showed that the two-layer LSTM was much quicker to converge
+than the one-layer LSTM, so here we compare the LS-LSTM to the two-layer
+CudnnLSTM.  We ran all experiments on a NVIDIA K80 GPU, choosing the largest
+minibatch size which fit into the GPU memory, with five runs per configuration
+allowing us to find the average and standard deviation of the time and number of
+iterations to convergence. For all CUDA runs, a brief search over learning rate and
+batch size was carried out to find the parameters which allow the network to
+converge most rapidly. 
+
+\section{Results}
+
+\begin{table}[]
+\centering
+\caption{Performance of the LS-LSTM compared to CUDA-optimised CudnnLSTM
+  implementation on problem 2b from (cite '97). We see that the LS-LSTM has a clear
+  advantage in training speed as the sequence length increases. \\
+  \footnotesize{* For the longest sequence length, the number of hidden units was decreased to
+  64 so that the net could fit in memory.}  }
+\label{my-label} 
+\begin{tabular}{@{}lllllll@{}} \toprule Sequence Length &
+\multicolumn{2}{c}{\textbf{1,024}} & \multicolumn{2}{c}{\textbf{8,192}} &
+\multicolumn{2}{c}{\textbf{1,048,576\(^*\)}} \\ \midrule & CudnnLSTM & LS-LSTM &
+CudnnLSTM & LS-LSTM & CudnnLSTM & LS-LSTM \\ \cmidrule(l){2-7} Iterations (1000s) &
+                     0.46 %bs=8
+                     \(\pm\) 0.08 & 0.53 %bs=8
+                                    \(\pm\) 0.04 & 1.5 %bs=8
+                                                   \(\pm\) 0.4 & 1.3 %bs=8
+                                                                 \(\pm\) 0.3
+                                                               & & 14 \(\pm\) 3 \\
+\begin{tabular}[c]{@{}l@{}}Wall Clock time (hours)\end{tabular} &
+0.084 \(\pm\) 0.012 & 0.027 \(\pm\) 0.003 & 1.1 \(\pm\) 0.3 & 0.44 \(\pm\) 0.08
+& & 9.7 \(\pm\) 1.7 \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\printbibliography
+\end{document}
