@@ -8,6 +8,8 @@ bs_cudn_dict = {1024: 8, 8192:4, 1048576:1} #Batch sizes that work best: found b
 bs_lslstm_dict = {1024: 8, 8192:4, 1048576:1} #Batch sizes that work best: found by quick search.
 n_hidden_dict = {1024: 512, 8192: 512, 1048576: 64} #Need to reduce the num of hidden layers
                                                     #So that the model fits in memory
+n_converge_dict = {1024:10, 8192: 30, 1048576: 50} #Number of 100% minibatches to say we've converged 
+sn_dict = {1024: 0.1, 8192: 0.05, 1048576: 64} #Need to reduce the num of hidden layers                                                    
 for n_step in n_steps:
     #Do the iteration for the  2-layer cudnn
     #Make sure that the sn is set to 0.03 for 8192 for the cuda
@@ -15,7 +17,7 @@ for n_step in n_steps:
     iter_list = []
     times_list = []
     for _ in range(num_trials):
-        a, b = cudnn(n_step, n_hidden, 128, bs_cudn_dict[n_step], 2)
+        a, b = cudnn(n_step, n_hidden, 128, bs_cudn_dict[n_step], 2, n_converge_dict[n_step])
         iter_list.append(a)
         times_list.append(b)
         print "Took {} seconds to converge after {} iterations".format(b, a)
@@ -29,7 +31,7 @@ for n_step in n_steps:
     iter_list = []
     times_list = []
     for _ in range(num_trials):
-        a, b = ls_lstm(n_step, n_hidden, 128, bs_lslstm_dict[n_step], 2)
+        a, b = ls_lstm(n_step, n_hidden, 128, bs_lslstm_dict[n_step], 2, n_converge_dict[n_step])
         iter_list.append(a)
         times_list.append(b)
     print """After {} trials for the one-layer ls-lstm, with sequence length
