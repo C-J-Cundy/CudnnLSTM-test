@@ -67,7 +67,7 @@ def gen_2b_data_1(p, q):
     return x_out, y_out
 
 
-def cudnn(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
+def cudnn(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1, n_converge=5):
     #Network Parameters
     tf.reset_default_graph()
     n_classes = 2
@@ -198,10 +198,10 @@ def cudnn(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
 
     start = time.time()
     if batch_size == 1:
-        conv_criterion = 15
+        n_converge = 15
     else:
-        conv_criterion = 5    
-    acc_list = [0]*conv_criterion
+        n_converge = 5    
+    acc_list = [0]*n_converge
     with tf.device("gpu:0"):
         with tf.Session() as sess:
             sess.run(init)
@@ -230,7 +230,7 @@ def cudnn(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1):
                     if step % (display_step*10) == 0: #Save the model every so often
                         saver.save(sess, './CudnnLSTM_'+str(n_steps)+'_steps_model_' + str(id_num),
                                    global_step=step)
-                    if acc_list == [1.0]*conv_criterion:
+                    if acc_list == [1.0]*n_converge:
                         print "Converged after {} iterations and {} seconds".format(step, time.time() - start)
                         break
                     else:
