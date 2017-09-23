@@ -67,7 +67,8 @@ def gen_2b_data_1(p, q):
     return x_out, y_out
 
 
-def cudnn(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1, n_converge=5):
+def cudnn(n_steps=1024, n_hidden=1024, n_input=128,
+          batch_size=8, n_layers=1, n_converge=5, clip=20):
     #Network Parameters
     tf.reset_default_graph()
     n_classes = 2
