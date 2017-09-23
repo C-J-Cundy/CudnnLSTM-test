@@ -21,7 +21,7 @@ for n_step in n_steps:
     times_list = []
     for _ in range(num_trials):
         a, b = cudnn(n_step, n_hidden, 128, bs_cudn_dict[n_step],
-                     2, n_converge_dict[n_step], clip_dict[n_step])
+                     2, n_converge_dict[n_step], clip_dict[n_step], sn_dict[n_step])
         iter_list.append(a)
         times_list.append(b)
         print "Took {} seconds to converge after {} iterations".format(b, a)
