@@ -126,10 +126,6 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1, 
     saver = tf.train.Saver()
 
     start = time.time()
-    if batch_size == 1:
-        n_converge = 15
-    else:
-        n_converge = 5
     acc_list = [0]*n_converge
     with tf.device("gpu:0"):
         with tf.Session() as sess:
