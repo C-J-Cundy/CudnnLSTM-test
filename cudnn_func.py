@@ -73,9 +73,6 @@ def cudnn(n_steps=1024, n_hidden=1024, n_input=128,
     tf.reset_default_graph()
     n_classes = 2
     forget_gate_init = 5.0                          # = 1/(n_in). We use uniform p(x)
-    clip = 20 #We use gradient clipping to stop the gradient exploding initially
-             #for the much larger networks
-
 
     #Training Parameters
     learning_rate = 0.0001
