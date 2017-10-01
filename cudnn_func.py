@@ -68,11 +68,11 @@ def gen_2b_data_1(p, q):
 
 
 def cudnn(n_steps=1024, n_hidden=1024, n_input=128,
-          batch_size=8, n_layers=1, n_converge=5, clip=20, sn=0.1):
+          batch_size=8, n_layers=1, n_converge=5, clip=20, sn=0.1, fg=5.0):
     #Network Parameters
     tf.reset_default_graph()
     n_classes = 2
-    forget_gate_init = 5.0                          # = 1/(n_in). We use uniform p(x)
+    forget_gate_init = fg                          # = 1/(n_in). We use uniform p(x)
 
     #Training Parameters
     learning_rate = 0.0001
