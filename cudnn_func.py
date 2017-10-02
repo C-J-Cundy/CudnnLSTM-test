@@ -193,9 +193,9 @@ def cudnn(n_steps=1024, n_hidden=1024, n_input=128,
     merged = tf.summary.merge_all()
     init = tf.global_variables_initializer()
     saver = tf.train.Saver()
-    if not os.exists('./models'):
+    if not os.path.exists('./models'):
         os.makedirs('./models')
-    if not os.exists('./CudnnLSTM_'+str(n_steps)+'_stepslog_'):
+    if not os.path.exists('./CudnnLSTM_'+str(n_steps)+'_stepslog_'):
         os.makedirs('./CudnnLSTM_'+str(n_steps)+'_stepslog_')
     start = time.time()
     acc_list = [0]*n_converge
