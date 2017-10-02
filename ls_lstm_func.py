@@ -4,6 +4,7 @@ from tensorflow.contrib import rnn
 import math
 from layers_new import linear_surrogate_lstm
 import time
+import os
 
 #We use an experimental parallel linear recurrence architecture for computing
 #the passes
@@ -127,12 +128,16 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1, 
 
     start = time.time()
     acc_list = [0]*n_converge
+    if not os.exists('./LS_LSTM_'+str(n_steps)+'_steps_model_'):
+        os.makedirs('./LS_LSTM_'+str(n_steps)+'_steps_model_')
+    if not os.exists('./LS_LSTM_'+str(n_steps)+'_steps_log_'):
+        os.makedirs('./LS_LSTM_'+str(n_steps)+'_steps_log_')
+    
     with tf.device("gpu:0"):
         with tf.Session() as sess:
             sess.run(init)
             step = 1
-            test_writer = tf.summary.FileWriter('./LS_LSTM_'+str(n_steps)+'_stepslog_' +
-                                                str(id_num), sess.graph)
+            test_writer = tf.summary.FileWriter('./LS_LSTM_'+str(n_steps)+'_stepslog_', sess.graph)
             # Keep training until reach max iterations
             while step * batch_size < training_iters:
                 if batch_size == 1:
@@ -153,7 +158,7 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1, 
                           "{:.6f}".format(loss) + ", Training Accuracy= " + \
                           "{:.5f}".format(acc))
                     if step % (display_step*10) == 0: #Save the model every so often
-                        saver.save(sess, './LS_LSTM_'+str(n_steps)+'_steps_model_' + str(id_num),
+                        saver.save(sess, './LS_LSTM_'+str(n_steps)+'_steps_model_',
                                    global_step=step)
                     if acc_list == [1.0]*n_converge:
                         print "Converged after {} iterations and {} seconds".format(step, time.time() - start)
