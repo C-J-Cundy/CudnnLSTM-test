@@ -3,6 +3,7 @@ import numpy as np
 from tensorflow.contrib import rnn
 import math
 import time
+import os
 #We construct an RNN to solve problem 2b in the original LSTM paper
 #(Hochreiter & Schmidhuber 1997). We implement the LSTM layer using
 #the CUDA kernel provided by tensorflow. There is little available
@@ -192,7 +193,8 @@ def cudnn(n_steps=1024, n_hidden=1024, n_input=128,
     merged = tf.summary.merge_all()
     init = tf.global_variables_initializer()
     saver = tf.train.Saver()
-
+    if not os.exists('./models'):
+        os.makedirs('./models')
     start = time.time()
     acc_list = [0]*n_converge
     with tf.device("gpu:0"):
@@ -221,7 +223,7 @@ def cudnn(n_steps=1024, n_hidden=1024, n_input=128,
                           "{:.6f}".format(loss) + ", Training Accuracy= " + \
                           "{:.5f}".format(acc))
                     if step % (display_step*10) == 0: #Save the model every so often
-                        saver.save(sess, './CudnnLSTM_'+str(n_steps)+'_steps_model_' + str(id_num),
+                        saver.save(sess, './models/CudnnLSTM_'+str(n_steps)+'_steps_model_' + str(id_num),
                                    global_step=step)
                     if acc_list == [1.0]*n_converge:
                         print "Converged after {} iterations and {} seconds".format(step, time.time() - start)
