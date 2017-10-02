@@ -128,9 +128,9 @@ def ls_lstm(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1, 
 
     start = time.time()
     acc_list = [0]*n_converge
-    if not os.exists('./LS_LSTM_'+str(n_steps)+'_steps_model_'):
+    if not os.path.exists('./LS_LSTM_'+str(n_steps)+'_steps_model_'):
         os.makedirs('./LS_LSTM_'+str(n_steps)+'_steps_model_')
-    if not os.exists('./LS_LSTM_'+str(n_steps)+'_steps_log_'):
+    if not os.path.exists('./LS_LSTM_'+str(n_steps)+'_steps_log_'):
         os.makedirs('./LS_LSTM_'+str(n_steps)+'_steps_log_')
     
     with tf.device("gpu:0"):
