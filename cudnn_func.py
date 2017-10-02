@@ -195,13 +195,15 @@ def cudnn(n_steps=1024, n_hidden=1024, n_input=128,
     saver = tf.train.Saver()
     if not os.exists('./models'):
         os.makedirs('./models')
+    if not os.exists('./CudnnLSTM_'+str(n_steps)+'_stepslog_'):
+        os.makedirs('./CudnnLSTM_'+str(n_steps)+'_stepslog_')
     start = time.time()
     acc_list = [0]*n_converge
     with tf.device("gpu:0"):
         with tf.Session() as sess:
             sess.run(init)
             step = 1
-            test_writer = tf.summary.FileWriter('./CudnnLSTM_'+str(n_steps)+'_stepslog_' + str(id_num),
+            test_writer = tf.summary.FileWriter('./CudnnLSTM_'+str(n_steps)+'_stepslog_',
                                                 sess.graph)
             # Keep training until reach max iterations
             while step * batch_size < training_iters:
@@ -223,7 +225,7 @@ def cudnn(n_steps=1024, n_hidden=1024, n_input=128,
                           "{:.6f}".format(loss) + ", Training Accuracy= " + \
                           "{:.5f}".format(acc))
                     if step % (display_step*10) == 0: #Save the model every so often
-                        saver.save(sess, './models/CudnnLSTM_'+str(n_steps)+'_steps_model_' + str(id_num),
+                        saver.save(sess, './models/CudnnLSTM_'+str(n_steps)+'_steps_model_',
                                    global_step=step)
                     if acc_list == [1.0]*n_converge:
                         print "Converged after {} iterations and {} seconds".format(step, time.time() - start)
