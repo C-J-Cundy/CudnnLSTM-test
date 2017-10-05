@@ -18,7 +18,7 @@ def embedding_layer(X, size, dims, name='embedding'):
 
 def fc_layer(X, hidden_size, nonlin=tf.nn.elu,
              use_bias=True, use_layer_norm=False, ln_eps=1e-3,
-             name='fc', sn=0.05, forget_bias=10.0):
+             name='fc', sn=0.05, forget_bias=5.0):
     n_dims = X.get_shape()[-1].value
     with vscope(name):
         W = tf.get_variable('W', initializer=tf.random_uniform([n_dims, hidden_size], maxval=sn, minval=-sn))
@@ -26,6 +26,10 @@ def fc_layer(X, hidden_size, nonlin=tf.nn.elu,
         if use_bias and name == 'pre_fc':
             b = tf.get_variable('b', initializer=tf.concat([tf.constant(forget_bias, shape=[hidden_size/4]),
                                                             tf.zeros([3*(hidden_size/4)])],axis=0))
+        if use_bias and name == 'sru_pre':
+            b = tf.get_variable('b', initifalizer=tf.concat([tf.zeros([3*(hidden_size/4)]), 
+                                                             tf.constant(forget_bias, shape=[hidden_size/3]),
+                                                             tf.zeros([3*(hidden_size/3)])],axis=0))            
         elif use_bias:
             b = tf.get_variable('b', initializer=tf.zeros([hidden_size]))
         else:
@@ -73,4 +77,17 @@ def linear_surrogate_lstm(X, hidden_size, name='lin_sur_lstm'):
 
         c = linear_recurrence(f, i * z)
         h = o * c
+        return h
+
+def SRU(X, name='SRU'):
+    size = X.get_shape()[-1].value
+    with vscope(name):
+        preact = fc_layer(X, 3 * size, nonlin=tf.identity, name='sru_pre')
+        x_tilde, f_pre, r_pre = tf.split(preact, 3, len(preact.shape) - 1)
+        
+        f = tf.sigmoid(f_pre)
+        r = tf.sigmoid(r_pre)
+        
+        c = linear_recurrence(f, (1 - f) * x_tilde)
+        h = r * c + (1 - r) * X
         return h
