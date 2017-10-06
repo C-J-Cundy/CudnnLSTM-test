@@ -26,10 +26,10 @@ def fc_layer(X, hidden_size, nonlin=tf.nn.elu,
         if use_bias and name == 'pre_fc':
             b = tf.get_variable('b', initializer=tf.concat([tf.constant(forget_bias, shape=[hidden_size/4]),
                                                             tf.zeros([3*(hidden_size/4)])],axis=0))
-        if use_bias and name == 'sru_pre':
-            b = tf.get_variable('b', initifalizer=tf.concat([tf.zeros([3*(hidden_size/4)]), 
+        elif use_bias and name == 'sru_pre':
+            b = tf.get_variable('b', initializer=tf.concat([tf.zeros([(hidden_size/3)]), 
                                                              tf.constant(forget_bias, shape=[hidden_size/3]),
-                                                             tf.zeros([3*(hidden_size/3)])],axis=0))            
+                                                             tf.zeros([(hidden_size/3)])],axis=0))            
         elif use_bias:
             b = tf.get_variable('b', initializer=tf.zeros([hidden_size]))
         else:
