@@ -3,6 +3,7 @@ import numpy as np
 from tensorflow.contrib import rnn
 import math
 from layers_new import linear_surrogate_lstm
+from layers import SRU
 import time
 import os
 
@@ -65,7 +66,7 @@ def gen_2b_data_1(p, q):
     return x_out, y_out
 
 
-def slr(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1, n_converge=5):
+def slr(n_steps=1024, n_hidden=512, n_input=128, batch_size=8, n_layers=1, n_converge=5):
         #Network Parameters
     tf.reset_default_graph()
     n_classes = 2
@@ -94,9 +95,9 @@ def slr(n_steps=1024, n_hidden=1024, n_input=128, batch_size=8, n_layers=1, n_co
 
     tf.get_variable_scope().reuse == True
     W1 = tf.get_variable('W1', initializer=
-                         tf.random_normal([n_hidden, n_classes]), dtype='float')
+                         tf.random_normal([n_input, n_classes]), dtype='float')
     b1 = tf.get_variable('b1', initializer=tf.zeros([n_classes]), dtype='float')
-
+    
     #Initialise all weights & biases for the plrlstm: set weights according to Glorot
     #There are eight weights and 4 biases per layer in the LSTM. Described in
     #http://docs.nvidia.com/deeplearning/sdk/cudnn-user-guide/index.html#cudnnRNNMode_t
