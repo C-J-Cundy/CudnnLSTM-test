@@ -1,5 +1,6 @@
 import tensorflow as tf
 from linear_recurrent_net.tensorflow_binding import linear_recurrence
+from linear_recurrent_serial.tensorflow_binding import s_linear_recurrence
 
 def vscope(name):
     return tf.variable_scope(None, default_name=name)
@@ -89,5 +90,52 @@ def SRU(X, name='SRU'):
         r = tf.sigmoid(r_pre)
         
         c = linear_recurrence(f, (1 - f) * x_tilde)
+        h = r * c + (1 - r) * X
+        return h
+
+def s_gilr_layer(X, hidden_size, nonlin=tf.nn.elu,
+               name='gilr'):
+    """
+    g_t = sigmoid(Ux_t + b)
+    h_t = g_t h_{t-1} + (1-g_t) f(Vx_t + c)
+    """
+    with vscope(name):
+        n_dims = X.get_shape()[-1].value
+        act = fc_layer(X, 2 * hidden_size, nonlin=tf.identity)
+        gate, impulse = tf.split(act, 2, len(act.shape) - 1)
+        gate = tf.sigmoid(gate)
+        impulse = nonlin(impulse)
+        return s_linear_recurrence(gate, (1-gate) * impulse)
+
+def s_linear_surrogate_lstm(X, hidden_size, name='lin_sur_lstm'):
+    with vscope(name):
+        # 2 * hidden_size * n_dims params
+        h_tilde = gilr_layer(X, hidden_size, nonlin=tf.tanh)
+
+        # 4 * hidden_size * (hidden_size + n_dims)
+        preact = fc_layer(tf.concat([h_tilde, X], axis=-1), 4 * hidden_size,
+                          nonlin=tf.identity, name='pre_fc')
+
+        f, i, o, z = tf.split(preact, 4, len(preact.shape) - 1)
+
+        f = tf.sigmoid(f)
+        i = tf.sigmoid(i)
+        o = tf.sigmoid(o)
+        z = tf.tanh(z)
+
+        c = s_linear_recurrence(f, i * z)
+        h = o * c
+        return h
+
+def s_SRU(X, name='SRU'):
+    size = X.get_shape()[-1].value
+    with vscope(name):
+        preact = fc_layer(X, 3 * size, nonlin=tf.identity, name='sru_pre')
+        x_tilde, f_pre, r_pre = tf.split(preact, 3, len(preact.shape) - 1)
+        
+        f = tf.sigmoid(f_pre)
+        r = tf.sigmoid(r_pre)
+        
+        c = s_linear_recurrence(f, (1 - f) * x_tilde)
         h = r * c + (1 - r) * X
         return h
