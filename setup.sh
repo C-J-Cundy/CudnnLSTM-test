@@ -12,6 +12,5 @@ git clone https://github.com/eamartin/plr.git
 cd plr/linear_recurrent_net
 sudo cp /usr/local/cuda/lib64/libcudart* /usr/lib/
 ./build.sh
-export PYTHONPATH=~/plr/linear_recurrent_net:$PYTHONPATH
+export PYTHONPATH=~/plr/linear_recurrent_serial:~/plr/linear_recurrent_net:$PYTHONPATH
 alias emacs=emacs25
-
