@@ -5,7 +5,7 @@ from tensorflow.python.framework import ops
 dir = os.path.dirname(os.path.abspath(__file__))
 _lr_module = tf.load_op_library('%s/../../lib/tf_linear_recurrence.so' % dir)
 
-def linear_recurrence(decays, impulses, initial_state=None):
+def s_linear_recurrence(decays, impulses, initial_state=None):
     '''
     Compute r[i] = decays[i] * r[i - 1] + impulses[i] with r[0] = initial_state.
 
@@ -39,7 +39,7 @@ def _linear_recurrence_grad(op, dl_dresp):
     n_steps = tf.shape(impulses)[0]
 
     # forwards goes from h_0 to h_{T-1}
-    forwards_tail = linear_recurrence(decays, impulses, initial_state)[:-1, :]
+    forwards_tail = s_linear_recurrence(decays, impulses, initial_state)[:-1, :]
     forwards = tf.concat([tf.expand_dims(initial_state, 0), forwards_tail],
                          axis=0)
 
@@ -49,7 +49,7 @@ def _linear_recurrence_grad(op, dl_dresp):
     # decays from T, T-1, ..., 2
     # output gradients from T-1, T-2, ..., 1
     dl_dh_head = reverse(
-        linear_recurrence(
+        s_linear_recurrence(
             reverse(decays)[:-1, :],
             reverse(dl_dresp)[1:, :],
             dl_dresp[-1, :],
