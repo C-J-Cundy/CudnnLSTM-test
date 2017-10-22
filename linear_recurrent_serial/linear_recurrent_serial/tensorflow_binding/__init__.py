@@ -30,7 +30,7 @@ def s_linear_recurrence(decays, impulses, initial_state=None):
         resp = tf.reshape(resp, shape)
     return resp
 
-@ops.RegisterGradient("LinearRecurrence")
+@ops.RegisterGradient("SLinearRecurrence")
 def _linear_recurrence_grad(op, dl_dresp):
     decays = op.inputs[0]
     impulses = op.inputs[1]
