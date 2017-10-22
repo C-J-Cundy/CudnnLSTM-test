@@ -73,7 +73,7 @@ def random_test(bs_seq_len_list):
                         out = sess.run(pred, feed_dict={x: x_in, y: y_in})
                         finish = time.time()
                         times.append(finish - start)
-        ls_lstm_tp = (bs * n_step) / np.mean(times)
+        ls_lstm_tp = (bs * n_steps) / np.mean(times)
 
 
         tf.reset_default_graph()        
@@ -124,7 +124,7 @@ def random_test(bs_seq_len_list):
                         out = sess.run(pred, feed_dict={x: x_in, y: y_in})
                         finish = time.time()
                         times.append(finish - start)
-        s_ls_lstm_tp = (bs * n_step) / np.mean(times)
+        s_ls_lstm_tp = (bs * n_steps) / np.mean(times)
         
 
         #--------------------------------------------------------------------------------
