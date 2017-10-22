@@ -105,7 +105,7 @@ def s_gilr_layer(X, hidden_size, nonlin=tf.nn.elu,
         gate, impulse = tf.split(act, 2, len(act.shape) - 1)
         gate = tf.sigmoid(gate)
         impulse = nonlin(impulse)
-        return s_linear_recurrence(gate, (1-gate) * impulse)
+        return linear_recurrence(gate, (1-gate) * impulse, serial=True)
 
 def s_linear_surrogate_lstm(X, hidden_size, name='lin_sur_lstm'):
     with vscope(name):
@@ -123,7 +123,7 @@ def s_linear_surrogate_lstm(X, hidden_size, name='lin_sur_lstm'):
         o = tf.sigmoid(o)
         z = tf.tanh(z)
 
-        c = s_linear_recurrence(f, i * z)
+        c = linear_recurrence(f, i * z, serial=True)
         h = o * c
         return h
 
@@ -136,6 +136,6 @@ def s_SRU(X, name='SRU'):
         f = tf.sigmoid(f_pre)
         r = tf.sigmoid(r_pre)
         
-        c = s_linear_recurrence(f, (1 - f) * x_tilde)
+        c = linear_recurrence(f, (1 - f) * x_tilde, serial=True)
         h = r * c + (1 - r) * X
         return h
