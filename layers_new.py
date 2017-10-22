@@ -92,6 +92,33 @@ def SRU(X, name='SRU'):
         h = r * c + (1 - r) * X
         return h
 
+def QRNN(X, n, name='qrnn'):
+    size = X.get_shape()[-1].value
+    length = X.get_shape()[0].value
+    bs = X.get_shape()[1].value
+
+    with vscope(name):
+        #First we stack the previous Xs to set the linear surrogate
+        X_stacked = X
+        for m in range(1, n-1):
+            X_stacked = tf.concat([X_stacked,
+                                   tf.slice(tf.pad(X, [[m,0], [0,0], [0,0]]),
+                                            0, [0,0,0], [length - m, bs, size])],
+                                  axis = -1)
+        preact = fc_layer(X_stacked, 3 * n * size, nonlin=tf.identity, name='qrnn_pre')
+        print X_stacked
+
+        z, f, o = tf.split(preact, 3, len(preact.shape) - 1)
+
+        #Combine the previous Xs
+        z = tf.tanh(tf.add_n(tf.split(z, n, len(preact.shape) - 1)))
+        f = tf.sigmoid(tf.add_n(tf.split(f, n, len(preact.shape) - 1)))
+        o = tf.sigmoid(tf.add_n(tf.split(o, n, len(preact.shape) - 1)))
+        
+        c = linear_recurrence(f, (1 - f) * z)
+        h = o * c
+        return h    
+
 def s_gilr_layer(X, hidden_size, nonlin=tf.nn.elu,
                name='gilr'):
     """
