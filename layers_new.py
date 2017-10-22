@@ -1,6 +1,5 @@
 import tensorflow as tf
 from linear_recurrent_net.tensorflow_binding import linear_recurrence
-from linear_recurrent_serial.tensorflow_binding import s_linear_recurrence
 
 def vscope(name):
     return tf.variable_scope(None, default_name=name)
