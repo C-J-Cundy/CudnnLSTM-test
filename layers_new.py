@@ -184,4 +184,56 @@ def s_QRNN(X, n, name='qrnn'):
 
         c = linear_recurrence(f, (1 - f) * z, serial=True)
         h = o * c
-        return h    
+        return h
+
+
+def linear_surrogate_lstm_cpu(X, hidden_size, name='lin_sur_lstm'):
+    with vscope(name):
+        # 2 * hidden_size * n_dims params
+        h_tilde = gilr_layer(X, hidden_size, nonlin=tf.tanh)
+
+        # 4 * hidden_size * (hidden_size + n_dims)
+        preact = fc_layer(tf.concat([h_tilde, X], axis=-1), 4 * hidden_size,
+                          nonlin=tf.identity, name='pre_fc')
+
+        f, i, o, z = tf.split(preact, 4, len(preact.shape) - 1)
+
+        f = tf.sigmoid(f)
+        i = tf.sigmoid(i)
+        o = tf.sigmoid(o)
+        z = tf.tanh(z)
+
+        c = linear_recurrence_cpu(f, i * z)
+        h = o * c
+        return h
+
+def gilr_layer_cpu(X, hidden_size, nonlin=tf.nn.elu,
+               name='gilr'):
+    """
+    g_t = sigmoid(Ux_t + b)
+    h_t = g_t h_{t-1} + (1-g_t) f(Vx_t + c)
+    """
+    with vscope(name):
+        n_dims = X.get_shape()[-1].value
+        act = fc_layer(X, 2 * hidden_size, nonlin=tf.identity)
+        gate, impulse = tf.split(act, 2, len(act.shape) - 1)
+        gate = tf.sigmoid(gate)
+        impulse = nonlin(impulse)
+        return linear_recurrence_cpu(gate, (1-gate) * impulse)
+
+
+def linear_recurrence_cpu(f, b):
+    """Compute the linear recurrence using native tf operations
+    so that we evaluate without a GPU. We evaluate the recurrence
+    which is stepwise h_t = f * h_{t-1} + b, returning all h."""
+    fs = tf.unstack(f, axis=0)
+    bs = tf.unstack(b, axis=0)
+    h = tf.identity(b)
+
+    hs = [bs[0]]
+    for index in range(1, len(bs)):
+        print fs[index], bs[index]
+        to_append = tf.add(tf.multiply(fs[index], hs[index-1]), bs[index])
+        hs.append(to_append)
+    return tf.stack(hs)
+
