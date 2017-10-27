@@ -219,21 +219,21 @@ def gilr_layer_cpu(X, hidden_size, nonlin=tf.nn.elu,
         gate, impulse = tf.split(act, 2, len(act.shape) - 1)
         gate = tf.sigmoid(gate)
         impulse = nonlin(impulse)
-        return linear_recurrence_cpu(gate, (1-gate) * impulse)
+        return s_linear_recurrence_cpu(gate, (1-gate) * impulse)
 
+    #Ignore, not used
+# def linear_recurrence_cpu(f, b):
+#     """Compute the linear recurrence using native tf operations
+#     so that we evaluate without a GPU. We evaluate the recurrence
+#     which is stepwise h_t = f * h_{t-1} + b, returning all h."""
+#     fs = tf.unstack(f, axis=0)
+#     bs = tf.unstack(b, axis=0)
+#     h = tf.identity(b)
 
-def linear_recurrence_cpu(f, b):
-    """Compute the linear recurrence using native tf operations
-    so that we evaluate without a GPU. We evaluate the recurrence
-    which is stepwise h_t = f * h_{t-1} + b, returning all h."""
-    fs = tf.unstack(f, axis=0)
-    bs = tf.unstack(b, axis=0)
-    h = tf.identity(b)
-
-    hs = [bs[0]]
-    for index in range(1, len(bs)):
-        print fs[index], bs[index]
-        to_append = tf.add(tf.multiply(fs[index], hs[index-1]), bs[index])
-        hs.append(to_append)
-    return tf.stack(hs)
+#     hs = [bs[0]]
+#     for index in range(1, len(bs)):
+#         print fs[index], bs[index]
+#         to_append = tf.add(tf.multiply(fs[index], hs[index-1]), bs[index])
+#         hs.append(to_append)
+#     return tf.stack(hs)
 
