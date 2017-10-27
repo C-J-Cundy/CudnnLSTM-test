@@ -57,14 +57,14 @@ def random_test(bs_seq_len_list):
         with tf.device("gpu:0"):
             with tf.Session() as sess:
                 sess.run(init)
-                while step < 10:
+                while step < 10: #Do a few iters to warm up
                     out = sess.run(pred, feed_dict={x: x_in, y: y_in})
-                    step += 1
-                    if step != 0:
+                    if step >  3:
                         start = time.time()
                         out = sess.run(pred, feed_dict={x: x_in, y: y_in})
                         finish = time.time()
                         times.append(finish - start)
+                    step += 1                        
         ls_lstm_throughput_dict[(bs, n_steps)] = (bs * n_steps) / np.mean(times)
 
         #--------------------------------------------------------------------------------
@@ -183,12 +183,13 @@ def random_test(bs_seq_len_list):
                 sess.run(init)
                 while step < 10:
                     out = sess.run(pred, feed_dict={x: x_in, y: y_in})
-                    step += 1
-                    if step != 0:
+                    #Warm up with a few iters first
+                    if step > 3:
                         start = time.time()
                         out = sess.run(pred, feed_dict={x: x_in, y: y_in})
                         finish = time.time()
                         times.append(finish - start)
+                    step +=1                        
         cudnn_throughput_dict[(bs, n_steps)] = (bs * n_steps) / np.mean(times)
     return cudnn_throughput_dict, ls_lstm_throughput_dict
 
