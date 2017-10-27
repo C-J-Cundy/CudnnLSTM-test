@@ -273,7 +273,7 @@ if __name__ == "__main__":
 
     out = random_test(in_list1)
     print out
-    lstm_times, cudnn_times = out
+    cudnn_times, lstm_times = out
 
     fileObject = open('./lstm_dict', 'wb')
     pickle.dump(lstm_times, fileObject)
